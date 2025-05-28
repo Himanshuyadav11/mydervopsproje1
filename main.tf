@@ -1,11 +1,10 @@
-provider "aws" {
-  region = "ap-south-1"
-}
-
 resource "aws_instance" "foo" {
-  ami           = "ami-0e35ddab05955cf57"  # Amazon Linux 2 AMI
+  ami           = "ami-0e35ddab05955cf57"
   instance_type = "t2.micro"
-  key_name      = "karone"  # Optional: If you want to SSH in
+  key_name      = "karone"
+  associate_public_ip_address = true
+
+  vpc_security_group_ids = ["sg-052bd96f28b077ad9"]  # use your existing SG
 
   user_data = <<-EOF
               #!/bin/bash
@@ -19,26 +18,4 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "myproject_server"
   }
-
-  # Optional: Add a security group allowing HTTP
-  vpc_security_group_ids = [aws_security_group.allow_http.id]
 }
-
-resource "aws_security_group" "allow_http" {
-  name        = "allow_http"
-  description = "Allow HTTP inbound traffic"
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
