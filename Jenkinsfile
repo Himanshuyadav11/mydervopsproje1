@@ -1,7 +1,7 @@
 pipeline {
     parameters {
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-    } 
+    }
 
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
@@ -17,7 +17,7 @@ pipeline {
             }
         }
 
-        stage('Plan') {
+        stage('Terraform Init & Plan') {
             steps {
                 sh 'terraform init'
                 sh 'terraform plan -out=tfplan'
@@ -25,23 +25,22 @@ pipeline {
             }
         }
 
-        stage('Approval') {
+        stage('Manual Approval') {
             when {
                 not {
                     equals expected: true, actual: params.autoApprove
                 }
             }
-
             steps {
                 script {
                     def plan = readFile 'tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    input message: "Do you want to apply this Terraform plan?",
+                    parameters: [text(name: 'Plan', description: 'Terraform Plan', defaultValue: plan)]
                 }
             }
         }
 
-        stage('Apply') {
+        stage('Terraform Apply') {
             steps {
                 sh 'terraform apply -input=false tfplan'
             }
